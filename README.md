@@ -56,8 +56,8 @@ cd finAssist
 ```sh
 cd infra
 terraform init
+terraform plan
 terraform apply
-```
 
 ### 3. Backend setup
 ```sh
