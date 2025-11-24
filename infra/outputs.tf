@@ -28,8 +28,12 @@ output "openai_service_endpoint" {
   value = azurerm_cognitive_account.finassist_openai.endpoint
 }
 
-output "search_service_endpoint" {
-  value = azurerm_search_service.finassist_search.query_endpoint
+output "search_service_name" {
+  value = azurerm_search_service.finassist_search.name
+}
+
+output "search_service_id" {
+  value = azurerm_search_service.finassist_search.id
 }
 
 output "webapp_url" {
@@ -37,5 +41,6 @@ output "webapp_url" {
 }
 
 output "appinsights_instrumentation_key" {
-  value = azurerm_application_insights.finassist_appinsights.instrumentation_key
+  value     = azurerm_application_insights.finassist_appinsights.instrumentation_key
+  sensitive = true
 }

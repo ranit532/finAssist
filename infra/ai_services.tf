@@ -15,7 +15,7 @@ resource "azurerm_cognitive_account" "finassist_language" {
   location            = azurerm_resource_group.finassist_rg.location
   resource_group_name = azurerm_resource_group.finassist_rg.name
   kind                = "TextAnalytics"
-  sku_name            = "S0"
+  sku_name            = "F0"
 }
 
 resource "azurerm_cognitive_account" "finassist_openai" {

@@ -10,6 +10,7 @@ terraform {
 
 provider "azurerm" {
   features {}
+  subscription_id = "e8f896b2-d879-4f42-9ddc-8951669e072f"
 }
 
 resource "azurerm_resource_group" "finassist_rg" {

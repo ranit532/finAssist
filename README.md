@@ -58,6 +58,7 @@ cd infra
 terraform init
 terraform plan
 terraform apply
+```
 
 ### 3. Backend setup
 ```sh
@@ -67,7 +68,6 @@ cd app
 # COSMOS_KEY=your-cosmos-key
 # COSMOS_DB_NAME=your-db-name
 # COSMOS_CONTAINER_NAME=your-container-name
-
 pip install -r requirements.txt
 ```
 
@@ -95,10 +95,15 @@ npm start
 - The backend will fetch user data from Cosmos DB and render it in the conversational workflow.
 - Sentiment analysis and workflow steps are visualized in real time.
 
-## Azure Services Used
-- [Azure Cosmos DB](https://learn.microsoft.com/azure/cosmos-db/)
-- [Azure AI Language (CLU)](https://learn.microsoft.com/azure/ai-services/language-service/conversational-language-understanding/overview)
-- [Azure Cognitive Services Speech](https://learn.microsoft.com/azure/ai-services/speech-service/)
-- [Azure OpenAI Service](https://learn.microsoft.com/azure/ai-services/openai/)
-- [Azure AI Search](https://learn.microsoft.com/azure/search/)
-- [Azure Application Insights](https://learn.microsoft.com/azure/azure-monitor/app/app-insights-overview)
+## Azure Services Used & Purpose
+| Service                        | Purpose                                                      |
+|--------------------------------|--------------------------------------------------------------|
+| Azure Cosmos DB                | Stores user profiles, chat history, and key items             |
+| Azure Cognitive Services Speech| Speech-to-Text (STT) and Text-to-Speech (TTS) for voice input/output |
+| Azure AI Language (CLU/TextAnalytics) | Intent/entity recognition and sentiment analysis         |
+| Azure OpenAI Service           | LLM-based responses and contextual chat                       |
+| Azure AI Search                | Intelligent retrieval of company data, FAQs, policies         |
+| Azure Application Insights     | Logging and monitoring backend performance                    |
+| Azure App Service (Linux)      | Hosts the Python backend API                                  |
+
+Each service is provisioned via Terraform and integrated into the agentic workflow as described above.
