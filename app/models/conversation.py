@@ -8,6 +8,14 @@ class ConversationRequest(BaseModel):
     audio_data: Optional[bytes] = None
     session_id: Optional[str] = None
 
+class TransactionDetail(BaseModel):
+    id: str
+    merchant: str
+    info: str
+    address: str
+    amount: float
+    timestamp: str
+
 class ConversationResponse(BaseModel):
     text: str
     intent: Optional[str] = None
@@ -16,3 +24,5 @@ class ConversationResponse(BaseModel):
     sentiment: Optional[str] = None
     audio_data: Optional[bytes] = None
     stage: Optional[str] = None  # New: signals current workflow stage
+    user: Optional[Dict[str, Any]] = None  # User details
+    transactions: Optional[list[TransactionDetail]] = None  # Last 10 transactions

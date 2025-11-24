@@ -22,6 +22,16 @@ fake = Faker()
 users = []
 for i in range(100):
     user_id = f"C{str(91000 + i).zfill(5)}"
+    transactions = []
+    for t in range(10):
+        transactions.append({
+            "id": f"txn{user_id[-3:]}{t}",
+            "merchant": fake.company(),
+            "info": fake.bs(),
+            "address": fake.address(),
+            "amount": round(random.uniform(5, 500), 2),
+            "timestamp": fake.date_time_this_year().isoformat()
+        })
     user = {
         "id": user_id,
         "userId": user_id,
@@ -32,7 +42,8 @@ for i in range(100):
         "phone": fake.phone_number(),
         "dob": fake.date_of_birth(minimum_age=18, maximum_age=80).isoformat(),
         "accountBalance": round(random.uniform(1000, 10000), 2),
-        "createdAt": fake.date_time_this_decade().isoformat()
+        "createdAt": fake.date_time_this_decade().isoformat(),
+        "transactions": transactions
     }
     users.append(user)
 

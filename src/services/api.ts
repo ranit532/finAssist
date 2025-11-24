@@ -4,7 +4,7 @@
 
 export async function sendChatRequest(payload: any) {
   // Replace with your backend URL
-  const response = await fetch('http://localhost:8000/chat/', {
+  const response = await fetch('http://127.0.0.1:8000/chat/', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload)
@@ -13,6 +13,6 @@ export async function sendChatRequest(payload: any) {
 }
 
 export async function fetchInsights(session_id: string) {
-  const response = await fetch(`http://localhost:8000/insights/${session_id}`);
+  const response = await fetch(`http://127.0.0.1:8000/insights/${session_id}`);
   return response.json();
 }
