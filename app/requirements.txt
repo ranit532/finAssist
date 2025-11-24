@@ -1,0 +1,12 @@
+# requirements.txt
+# List all Python dependencies
+fastapi
+azure-cosmos
+azure-ai-language-conversations
+azure-cognitiveservices-speech
+azure-ai-textanalytics
+openai
+uvicorn
+pydantic
+requests
+faker
