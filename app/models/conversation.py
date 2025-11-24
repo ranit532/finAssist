@@ -15,3 +15,4 @@ class ConversationResponse(BaseModel):
     action_result: Optional[Dict[str, Any]] = None
     sentiment: Optional[str] = None
     audio_data: Optional[bytes] = None
+    stage: Optional[str] = None  # New: signals current workflow stage

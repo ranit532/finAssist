@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { Card, CardContent, Typography, Box, TextField, Button, Avatar, Stack } from '@mui/material';
 import PersonIcon from '@mui/icons-material/Person';
 import SmartToyIcon from '@mui/icons-material/SmartToy';
+import MicIcon from '@mui/icons-material/Mic';
+import IconButton from '@mui/material/IconButton';
 import { sendChatRequest } from '../services/api';
 
 interface ChatInterfaceProps {
@@ -14,23 +16,94 @@ interface ChatInterfaceProps {
 const ChatInterface: React.FC<ChatInterfaceProps> = ({ conversation, setConversation, setActiveStep, setInsights }) => {
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
+  const [isRecording, setIsRecording] = useState(false);
+  const [sessionId, setSessionId] = useState('new');
+
+  // TypeScript: declare SpeechRecognition types for browser
+  // @ts-ignore
+  const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+  let recognition: any = null;
+  if (SpeechRecognition) {
+    recognition = new SpeechRecognition();
+    recognition.continuous = false;
+    recognition.interimResults = false;
+    recognition.lang = 'en-US';
+  }
 
   const handleSend = async () => {
     if (!input) return;
     setLoading(true);
     setActiveStep(1); // Listening
-    const req = { text: input };
+    const req = { text: input, session_id: sessionId };
+    // Simulate listening stage
+    await new Promise(res => setTimeout(res, 500));
     const res = await sendChatRequest(req);
+    // Sync frontend stage with backend response
+    switch (res.stage) {
+      case 'understanding':
+        setActiveStep(2);
+        break;
+      case 'searching':
+        setActiveStep(3);
+        break;
+      case 'executing':
+        setActiveStep(4);
+        break;
+      case 'responding':
+        setActiveStep(5);
+        break;
+      default:
+        setActiveStep(2);
+    }
     setConversation([...conversation, { user: input, bot: res.text, time: new Date().toLocaleTimeString() }]);
-    setActiveStep(2); // Understanding
-    setTimeout(() => setActiveStep(3), 500); // Searching
-    setTimeout(() => setActiveStep(4), 1000); // Executing
-    setTimeout(() => setActiveStep(5), 1500); // Responding
+    // Update sessionId after first greeting
+    if (sessionId === 'new' && res.intent === 'greeting') {
+      setSessionId('active');
+    }
+    // Play Azure TTS audio if available (base64)
+    if (res.audio_data) {
+      const byteString = atob(res.audio_data);
+      const byteArray = new Uint8Array(byteString.length);
+      for (let i = 0; i < byteString.length; i++) {
+        byteArray[i] = byteString.charCodeAt(i);
+      }
+      const audioBlob = new Blob([byteArray], { type: 'audio/mp3' });
+      const audioUrl = URL.createObjectURL(audioBlob);
+      const audio = new Audio(audioUrl);
+      audio.play();
+    } else if ('speechSynthesis' in window) {
+      const utter = new window.SpeechSynthesisUtterance(res.text);
+      utter.voice = window.speechSynthesis.getVoices().find(v => v.name.includes('Female') || v.name.includes('Samantha')) || null;
+      utter.pitch = 1.1;
+      utter.rate = 1.0;
+      window.speechSynthesis.speak(utter);
+    }
     setLoading(false);
     // Fetch insights (simulate session_id)
-    const insights = await sendChatRequest({ session_id: 'demo' });
+    const insights = await sendChatRequest({ session_id: sessionId });
     setInsights(insights);
     setInput('');
+  };
+
+  const handleVoiceInput = () => {
+    if (!recognition) {
+      alert('Speech recognition not supported in this browser.');
+      return;
+    }
+    setIsRecording(true);
+    recognition.start();
+    recognition.onresult = (event: any) => {
+      const transcript = event.results[0][0].transcript;
+      setInput(transcript);
+      setIsRecording(false);
+    };
+    recognition.onerror = () => {
+      setIsRecording(false);
+      alert('Voice recognition error.');
+    };
+    recognition.onend = () => {
+      setIsRecording(false);
+    };
   };
 
   return (
@@ -61,9 +134,12 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ conversation, setConversa
           value={input}
           onChange={e => setInput(e.target.value)}
           fullWidth
-          disabled={loading}
+          disabled={loading || isRecording}
         />
-        <Button variant="contained" onClick={handleSend} disabled={loading}>Send</Button>
+        <IconButton color={isRecording ? "secondary" : "primary"} onClick={handleVoiceInput} disabled={loading || isRecording}>
+          <MicIcon />
+        </IconButton>
+        <Button variant="contained" onClick={handleSend} disabled={loading || isRecording}>Send</Button>
         {/* TODO: Add voice input/output buttons */}
       </Stack>
     </Box>
