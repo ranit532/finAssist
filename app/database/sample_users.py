@@ -1,9 +1,11 @@
 import os
+from dotenv import load_dotenv
 import random
 import string
 from azure.cosmos import CosmosClient
 from faker import Faker
 
+load_dotenv()
 # Load Cosmos DB credentials from environment variables
 COSMOS_ENDPOINT = os.getenv("COSMOS_ENDPOINT")
 COSMOS_KEY = os.getenv("COSMOS_KEY")
