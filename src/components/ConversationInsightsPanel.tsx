@@ -23,22 +23,22 @@ const ConversationInsightsPanel: React.FC<ConversationInsightsPanelProps> = ({ i
   ];
 
   return (
-    <Card elevation={3} sx={{ mb: 4 }}>
+    <Card elevation={0} sx={{ mb: 4, bgcolor: '#f5f5f5', borderRadius: 3, boxShadow: '0 2px 8px rgba(0,0,0,0.04)', border: '1px solid #e0e0e0' }}>
       <CardContent>
-        <Typography variant="h6" gutterBottom>Conversation Insights</Typography>
-        <Typography variant="subtitle2">Real time sentiment Analysis</Typography>
-        <Box sx={{ height: 150 }}>
+        <Typography variant="h6" gutterBottom sx={{ color: '#222', fontWeight: 700 }}>Conversation Insights</Typography>
+        <Typography variant="subtitle2" sx={{ color: '#222', fontWeight: 500 }}>Real time sentiment Analysis</Typography>
+        <Box sx={{ height: 150, mt: 1 }}>
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={lineData}>
-              <XAxis dataKey="time" />
-              <YAxis domain={[-1, 1]} />
+              <XAxis dataKey="time" stroke="#888" fontSize={12} />
+              <YAxis domain={[-1, 1]} stroke="#888" fontSize={12} />
               <Tooltip />
-              <Line type="monotone" dataKey="value" stroke="#1976d2" strokeWidth={2} dot={false} />
+              <Line type="monotone" dataKey="value" stroke="#d32f2f" strokeWidth={2} dot={false} />
             </LineChart>
           </ResponsiveContainer>
         </Box>
-        <Typography variant="subtitle2" sx={{ mt: 2 }}>Overall Sentiment Distribution</Typography>
-        <Box sx={{ height: 180 }}>
+        <Typography variant="subtitle2" sx={{ mt: 2, color: '#222', fontWeight: 500 }}>Overall Sentiment Distribution</Typography>
+        <Box sx={{ height: 180, mt: 1 }}>
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
               <Pie
@@ -58,12 +58,12 @@ const ConversationInsightsPanel: React.FC<ConversationInsightsPanelProps> = ({ i
           </ResponsiveContainer>
         </Box>
         <Box sx={{ textAlign: 'center', mt: 2 }}>
-          <Button variant="contained" color="error" size="large">Human Agent Takeover</Button>
+          <Button variant="contained" sx={{ bgcolor: '#d32f2f', color: '#fff', fontWeight: 600, borderRadius: 2, px: 4, boxShadow: 'none', '&:hover': { bgcolor: '#b71c1c' } }} size="large">Human Agent Takeover</Button>
         </Box>
-        <Typography variant="subtitle2" sx={{ mt: 2 }}>Key Items</Typography>
-        <ul>
+        <Typography variant="subtitle2" sx={{ mt: 2, color: '#222', fontWeight: 500 }}>Key Items</Typography>
+        <ul style={{ margin: 0, paddingLeft: 18 }}>
           {(insights?.key_items || []).map((item: string, idx: number) => (
-            <li key={idx}>{item}</li>
+            <li key={idx} style={{ color: '#222', fontSize: 14 }}>{item}</li>
           ))}
         </ul>
       </CardContent>

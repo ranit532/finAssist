@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Card, CardContent, Typography, Box, TextField, Button, Avatar, Stack } from '@mui/material';
+import { Card, CardContent, Typography, Box, TextField, Button, Avatar, Stack, Paper } from '@mui/material';
 import PersonIcon from '@mui/icons-material/Person';
 import SmartToyIcon from '@mui/icons-material/SmartToy';
 import MicIcon from '@mui/icons-material/Mic';
@@ -107,42 +107,54 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ conversation, setConversa
   };
 
   return (
-    <Box>
-      <Box sx={{ mb: 2 }}>
+    <Paper elevation={2} sx={{ borderRadius: 2, bgcolor: '#fff', p: 0, boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
+      {/* Chat panel header */}
+      <Box sx={{ bgcolor: '#d32f2f', color: '#fff', px: 3, py: 1.5, borderTopLeftRadius: 8, borderTopRightRadius: 8 }}>
+        <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
+          Chat Bot
+        </Typography>
+      </Box>
+      <Box sx={{ px: 3, py: 2, minHeight: 320, maxHeight: 400, overflowY: 'auto', bgcolor: '#fafafa' }}>
         {conversation.map((msg, idx) => (
-          <Stack direction="row" spacing={2} alignItems="flex-start" key={idx} sx={{ mb: 2 }}>
-            <Avatar sx={{ bgcolor: '#1976d2' }}><PersonIcon /></Avatar>
-            <Card sx={{ flex: 1, bgcolor: '#f1f8e9' }}>
-              <CardContent>
-                <Typography variant="body2" color="textSecondary">{msg.time}</Typography>
-                <Typography variant="body1"><b>User:</b> {msg.user}</Typography>
-              </CardContent>
-            </Card>
-            <Avatar sx={{ bgcolor: '#e91e63' }}><SmartToyIcon /></Avatar>
-            <Card sx={{ flex: 1, bgcolor: '#fce4ec' }}>
-              <CardContent>
-                <Typography variant="body2" color="textSecondary">{msg.time}</Typography>
-                <Typography variant="body1"><b>Bot:</b> {msg.bot}</Typography>
-              </CardContent>
-            </Card>
-          </Stack>
+          <Box key={idx} sx={{ mb: 2 }}>
+            {/* User message */}
+            <Stack direction="row" spacing={2} alignItems="flex-end" sx={{ mb: 1 }}>
+              <Avatar sx={{ bgcolor: '#222', width: 32, height: 32 }}><PersonIcon /></Avatar>
+              <Box sx={{ bgcolor: '#fff', border: '1px solid #e0e0e0', borderRadius: 2, px: 2, py: 1, maxWidth: 400 }}>
+                <Typography variant="caption" color="textSecondary">{msg.time}</Typography>
+                <Typography variant="body2" sx={{ color: '#222', fontWeight: 500 }}>{msg.user}</Typography>
+              </Box>
+            </Stack>
+            {/* Bot message */}
+            <Stack direction="row" spacing={2} alignItems="flex-end">
+              <Avatar sx={{ bgcolor: '#d32f2f', width: 32, height: 32 }}><SmartToyIcon /></Avatar>
+              <Box sx={{ bgcolor: '#fff', border: '1px solid #d32f2f', borderRadius: 2, px: 2, py: 1, maxWidth: 400 }}>
+                <Typography variant="caption" color="textSecondary">{msg.time}</Typography>
+                <Typography variant="body2" sx={{ color: '#d32f2f', fontWeight: 500 }}>{msg.bot}</Typography>
+              </Box>
+            </Stack>
+          </Box>
         ))}
       </Box>
-      <Stack direction="row" spacing={2} alignItems="center">
-        <TextField
-          label="Type your message or use voice..."
-          value={input}
-          onChange={e => setInput(e.target.value)}
-          fullWidth
-          disabled={loading || isRecording}
-        />
-        <IconButton color={isRecording ? "secondary" : "primary"} onClick={handleVoiceInput} disabled={loading || isRecording}>
-          <MicIcon />
-        </IconButton>
-        <Button variant="contained" onClick={handleSend} disabled={loading || isRecording}>Send</Button>
-        {/* TODO: Add voice input/output buttons */}
-      </Stack>
-    </Box>
+      {/* Input area */}
+      <Box sx={{ px: 3, py: 2, borderTop: '1px solid #e0e0e0', bgcolor: '#fff', borderBottomLeftRadius: 8, borderBottomRightRadius: 8 }}>
+        <Stack direction="row" spacing={2} alignItems="center">
+          <TextField
+            placeholder="Type your message or use voice..."
+            value={input}
+            onChange={e => setInput(e.target.value)}
+            fullWidth
+            disabled={loading || isRecording}
+            sx={{ bgcolor: '#fafafa', borderRadius: 2 }}
+            size="small"
+          />
+          <IconButton color={isRecording ? "secondary" : "primary"} onClick={handleVoiceInput} disabled={loading || isRecording}>
+            <MicIcon />
+          </IconButton>
+          <Button variant="contained" sx={{ bgcolor: '#d32f2f', color: '#fff', borderRadius: 2, px: 3, boxShadow: 'none', '&:hover': { bgcolor: '#b71c1c' } }} onClick={handleSend} disabled={loading || isRecording}>Send</Button>
+        </Stack>
+      </Box>
+    </Paper>
   );
 };
 
