@@ -61,6 +61,14 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ conversation, setConversa
       setSessionId('active');
     }
     // Play Azure TTS audio if available (base64)
+    const showHumanAgentModal = () => {
+      setInsights((prev: any) => ({ ...prev, intent: res.intent }));
+      if (res.intent === 'human_agent') {
+        setTimeout(() => {
+          setInsights((prev: any) => ({ ...prev, intent: undefined }));
+        }, 30000);
+      }
+    };
     if (res.audio_data) {
       const byteString = atob(res.audio_data);
       const byteArray = new Uint8Array(byteString.length);
@@ -70,13 +78,17 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ conversation, setConversa
       const audioBlob = new Blob([byteArray], { type: 'audio/mp3' });
       const audioUrl = URL.createObjectURL(audioBlob);
       const audio = new Audio(audioUrl);
+      audio.onended = showHumanAgentModal;
       audio.play();
     } else if ('speechSynthesis' in window) {
       const utter = new window.SpeechSynthesisUtterance(res.text);
       utter.voice = window.speechSynthesis.getVoices().find(v => v.name.includes('Female') || v.name.includes('Samantha')) || null;
       utter.pitch = 1.1;
       utter.rate = 1.0;
+      utter.onend = showHumanAgentModal;
       window.speechSynthesis.speak(utter);
+    } else {
+      showHumanAgentModal();
     }
     setLoading(false);
     // Fetch insights (simulate session_id)
