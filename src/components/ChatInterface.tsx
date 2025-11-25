@@ -18,6 +18,8 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ conversation, setConversa
   const [loading, setLoading] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
   const [sessionId, setSessionId] = useState('new');
+  // Use a ref to always keep the latest sentiment trend array
+  const sentimentTrendRef = React.useRef<{ time: string, value: number }[]>([]);
 
   // TypeScript: declare SpeechRecognition types for browser
   // @ts-ignore
@@ -56,16 +58,30 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ conversation, setConversa
         setActiveStep(2);
     }
     setConversation([...conversation, { user: input, bot: res.text, time: new Date().toLocaleTimeString() }]);
+    // Update sentiment trend for chart
+    if (res.sentiment_score !== undefined) {
+      sentimentTrendRef.current = [...sentimentTrendRef.current, { time: new Date().toLocaleTimeString(), value: res.sentiment_score }];
+    }
     // Update sessionId after first greeting
     if (sessionId === 'new' && res.intent === 'greeting') {
       setSessionId('active');
     }
+    // Always update insights with latest sentiment_distribution and trend
+    const updateInsights = (intentOverride?: string) => {
+      setInsights((prev: any) => ({
+        ...prev,
+        intent: intentOverride !== undefined ? intentOverride : res.intent,
+        sentiment_trend: [...sentimentTrendRef.current],
+        sentiment_distribution: res.sentiment_distribution || prev?.sentiment_distribution,
+        key_items: res.key_items || prev?.key_items
+      }));
+    };
     // Play Azure TTS audio if available (base64)
     const showHumanAgentModal = () => {
-      setInsights((prev: any) => ({ ...prev, intent: res.intent }));
+      updateInsights();
       if (res.intent === 'human_agent') {
         setTimeout(() => {
-          setInsights((prev: any) => ({ ...prev, intent: undefined }));
+          updateInsights(undefined);
         }, 30000);
       }
     };
@@ -93,7 +109,12 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ conversation, setConversa
     setLoading(false);
     // Fetch insights (simulate session_id)
     const insights = await sendChatRequest({ session_id: sessionId });
-    setInsights(insights);
+    setInsights((prev: any) => ({
+      ...insights,
+      sentiment_trend: [...sentimentTrendRef.current],
+      sentiment_distribution: res.sentiment_distribution || insights?.sentiment_distribution,
+      key_items: res.key_items || insights?.key_items
+    }));
     setInput('');
   };
 

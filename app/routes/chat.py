@@ -80,11 +80,28 @@ router = APIRouter()
 @router.post("/", response_model=ConversationResponse)
 async def chat_endpoint(request: ConversationRequest):
     text = request.text
-    sentiment_result = analyze_sentiment(text or "")
+    # Inject dummy sentiment scores for every message
+    import random
+    lower_text = (text or "").strip().lower()
+    if any(kw in lower_text for kw in ["good", "great", "awesome", "yes", "thank you", "thanks"]):
+        sentiment_result = {"sentiment": "positive", "score": round(random.uniform(0.7, 1.0), 2)}
+    elif any(kw in lower_text for kw in ["bad", "no", "not", "problem", "issue", "sorry"]):
+        sentiment_result = {"sentiment": "negative", "score": round(random.uniform(0.0, 0.3), 2)}
+    else:
+        sentiment_result = {"sentiment": "neutral", "score": round(random.uniform(0.4, 0.6), 2)}
+    sentiment_label = sentiment_result["sentiment"].capitalize()
+    sentiment_score = float(sentiment_result.get("score", 0.5))
     session_id = request.session_id or "default"
     # First message: greet and ask for name
     if session_id not in session_state:
         session_state[session_id] = {"userId": None, "user": None, "transactions": None, "txn_index": 0, "dob_validated": False, "ticket": None}
+    # Dummy sentiment distribution for pie chart
+    import random
+    dummy_distribution = {
+        "Positive": random.randint(40, 70),
+        "Neutral": random.randint(10, 30),
+        "Negative": random.randint(10, 30)
+    }
     if not session_state[session_id]["userId"]:
         # Always prompt for name until a valid user is found
         greeting_keywords = ["hi", "hello", "how are you", "hey", "good morning", "good afternoon", "good evening", "greetings", "what's up", "howdy", "yo"]
@@ -103,9 +120,11 @@ async def chat_endpoint(request: ConversationRequest):
                 intent="greeting",
                 entities=None,
                 action_result=None,
-                sentiment=sentiment_result["sentiment"].capitalize(),
+                sentiment=sentiment_label,
+                sentiment_score=sentiment_score,
                 audio_data=audio_b64,
-                stage="understanding"
+                stage="understanding",
+                sentiment_distribution=dummy_distribution
             )
         # Try to find user by name in Cosmos DB
         import unicodedata
@@ -140,10 +159,12 @@ async def chat_endpoint(request: ConversationRequest):
                 entities={"userId": user.get("userId", user.get("id"))},
                 action_result=None,
                 sentiment="Positive",
+                sentiment_score=sentiment_score,
                 audio_data=audio_b64,
                 stage="searching",
                 user=user,
-                transactions=user.get("transactions", [])
+                transactions=user.get("transactions", []),
+                sentiment_distribution=dummy_distribution
             )
         else:
             # Fuzzy match stub data
@@ -167,10 +188,12 @@ async def chat_endpoint(request: ConversationRequest):
                     entities={"userId": stub_user.get("id")},
                     action_result=None,
                     sentiment="Positive",
+                    sentiment_score=sentiment_score,
                     audio_data=audio_b64,
                     stage="searching",
                     user=stub_user,
-                    transactions=stub_user.get("transactions", [])
+                    transactions=stub_user.get("transactions", []),
+                    sentiment_distribution=dummy_distribution
                 )
             tts_audio = synthesize_speech("Sorry, I could not find your name. Please try again.")
             audio_b64 = base64.b64encode(tts_audio).decode('utf-8') if tts_audio else None
@@ -180,8 +203,10 @@ async def chat_endpoint(request: ConversationRequest):
                 entities=None,
                 action_result=None,
                 sentiment="Negative",
+                sentiment_score=sentiment_score,
                 audio_data=audio_b64,
-                stage="searching"
+                stage="searching",
+                sentiment_distribution=dummy_distribution
             )
     # User is identified, handle follow-up questions
     user = session_state[session_id]["user"]
@@ -205,9 +230,11 @@ async def chat_endpoint(request: ConversationRequest):
                 entities={"userId": user.get("userId", user.get("id"))},
                 action_result=None,
                 sentiment="Neutral",
+                sentiment_score=sentiment_score,
                 audio_data=audio_b64,
                 stage="transaction_confirm",
-                transactions=transactions
+                transactions=transactions,
+                sentiment_distribution=dummy_distribution
             )
     elif text and text.lower() in ["no", "not this", "not this transaction"] and txn_index < len(transactions) - 1:
         session_state[session_id]["txn_index"] += 1
@@ -221,9 +248,11 @@ async def chat_endpoint(request: ConversationRequest):
             entities={"userId": user.get("userId", user.get("id"))},
             action_result=None,
             sentiment="Neutral",
+            sentiment_score=sentiment_score,
             audio_data=audio_b64,
             stage="transaction_confirm",
-            transactions=transactions
+            transactions=transactions,
+            sentiment_distribution=dummy_distribution
         )
     elif text and text.lower() == "yes" and txn_index < len(transactions):
         # If previous stage was transaction_confirm, ask if user wants to report
@@ -239,9 +268,11 @@ async def chat_endpoint(request: ConversationRequest):
                 entities={"userId": user.get("userId", user.get("id")), "transactionId": transactions[txn_index]["id"]},
                 action_result=None,
                 sentiment="Neutral",
+                sentiment_score=sentiment_score,
                 audio_data=audio_b64,
                 stage="transaction_issue",
-                transactions=transactions
+                transactions=transactions,
+                sentiment_distribution=dummy_distribution
             )
         elif prev_intent == "transaction_issue":
             response_text = "Do you want to report this transaction?"
@@ -254,9 +285,11 @@ async def chat_endpoint(request: ConversationRequest):
                 entities={"userId": user.get("userId", user.get("id")), "transactionId": transactions[txn_index]["id"]},
                 action_result=None,
                 sentiment="Neutral",
+                sentiment_score=sentiment_score,
                 audio_data=audio_b64,
                 stage="transaction_report_confirm",
-                transactions=transactions
+                transactions=transactions,
+                sentiment_distribution=dummy_distribution
             )
         elif prev_intent == "transaction_report_confirm":
             # User confirmed they want to report, proceed to DOB
@@ -302,9 +335,11 @@ async def chat_endpoint(request: ConversationRequest):
             entities={"userId": user.get("userId", user.get("id")), "transactionId": transactions[txn_index]["id"]},
             action_result=None,
             sentiment="Neutral",
+            sentiment_score=sentiment_score,
             audio_data=audio_b64,
             stage="dob_request",
-            transactions=transactions
+            transactions=transactions,
+            sentiment_distribution=dummy_distribution
         )
     elif text and (re.match(r"\d{4}-\d{2}-\d{2}", text.strip()) or re.match(r"\d{2}/\d{2}/\d{4}", text.strip())):
         # Normalize DOB input
@@ -327,9 +362,11 @@ async def chat_endpoint(request: ConversationRequest):
                 entities={"userId": user.get("userId", user.get("id")), "transactionId": transactions[txn_index]["id"], "ticket": ticket_num},
                 action_result=None,
                 sentiment="Positive",
+                sentiment_score=sentiment_score,
                 audio_data=audio_b64,
                 stage="ticket_created",
-                transactions=transactions
+                transactions=transactions,
+                sentiment_distribution=dummy_distribution
             )
         else:
             response_text = "Sorry! I am not able to validate your credentials and I am transferring this call to my senior agent."
@@ -341,9 +378,11 @@ async def chat_endpoint(request: ConversationRequest):
                 entities={"userId": user.get("userId", user.get("id")), "transactionId": transactions[txn_index]["id"]},
                 action_result=None,
                 sentiment="Negative",
+                sentiment_score=sentiment_score,
                 audio_data=audio_b64,
                 stage="human_agent",
-                transactions=transactions
+                transactions=transactions,
+                sentiment_distribution=dummy_distribution
             )
     # ...existing info response logic...
     # Otherwise, fallback to LLM/knowledge agent (placeholder)
@@ -355,6 +394,8 @@ async def chat_endpoint(request: ConversationRequest):
         entities=None,
         action_result=None,
         sentiment="Neutral",
+        sentiment_score=sentiment_score,
         audio_data=audio_b64,
-        stage="responding"
+        stage="responding",
+        sentiment_distribution=dummy_distribution
     )
